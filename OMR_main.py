@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import os
 import streamlit as st
-import utility  # Ensure it includes: splitBoxes, rectContour, reorder, getCornerPoints, showAnswers
+import utility  
 
 # Parameters
 heightImg = 700
@@ -143,7 +143,7 @@ if uploaded_student and 'ans' in locals():
                 grading.append(1 if ans[x] == marked[0] else 0)
             elif len(marked) == 0:
                 raise Exception(f"Question {x+1} in the student sheet is left blank.")
-            else:
+            else:   
                 raise Exception(f"Question {x+1} in the student sheet has multiple answers marked. Only one is allowed.")
 
         score = (sum(grading) / questions) * 100
@@ -170,6 +170,20 @@ if uploaded_student and 'ans' in locals():
 
         st.success(f"Grading Complete! Score: {int(score)}%")
         st.image(cv2.cvtColor(imgFinal, cv2.COLOR_BGR2RGB), caption="Final Result", channels="RGB", use_container_width=True)
+
+        # Save the final result
+        result_filename = os.path.join(save_dir, f"graded_{uploaded_student.name}.png")
+        cv2.imwrite(result_filename, imgFinal)
+
+        # Convert image to bytes and offer for download
+        is_success, buffer = cv2.imencode(".png", imgFinal)
+        if is_success:
+            st.download_button(
+                label="Download Graded Sheet",
+                data=buffer.tobytes(),
+                file_name=f"graded_{uploaded_student.name}.png",
+                mime="image/png"
+            )
 
     except Exception as e:
         st.error(f"Error processing student sheet: {e}")
